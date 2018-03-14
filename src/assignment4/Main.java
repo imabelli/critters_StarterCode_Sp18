@@ -66,6 +66,13 @@ public class Main {
         } else { // if no arguments to main
             kb = new Scanner(System.in); // use keyboard and console
         }
+        String userInput = kb.nextLine();
+        //add start of controller to parse user input
+        while(userInput.indexOf("quit") == -1) {
+        	String[] splitInput = userInput.trim().split("\\s+");
+        	userInput = kb.nextLine();
+        }
+        //now we will check for user commands (valid commands in instructions)
 
         /* Do not alter the code above for your submission. */
         /* Write your code below. */

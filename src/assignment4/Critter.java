@@ -176,10 +176,9 @@ public abstract class Critter {
 		// Complete this method.
 	}
 	
-	public static void main(String[] args) {
-		displayWorld();
-	}
-	
+	/**
+	 * make empty world as 2D char array
+	 */
 	private static void initEmptyWorldView() {
 		char[] topBottom = new char[Params.world_width + 2];
 		topBottom[0] = '+';
@@ -200,6 +199,9 @@ public abstract class Critter {
 		worldArray[Params.world_height + 1] = topBottom;
 	}
 	
+	/** 
+	 * add critters into originally empty array
+	 */
 	private static void populateWorldView() {
 		for(int i = 0; i < population.size(); i++) {
 			Critter currentCritter = population.get(i);
@@ -211,6 +213,9 @@ public abstract class Critter {
 		}
 	}
 	
+	/**
+	 * view component
+	 */
 	public static void displayWorld() {
 		initEmptyWorldView();
 		populateWorldView();
