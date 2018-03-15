@@ -70,10 +70,23 @@ public class Main {
         //add start of controller to parse user input
         while(userInput.indexOf("quit") == -1) {
         	String[] splitInput = userInput.trim().split("\\s+");
+        	if(splitInput[0] == "show") {
+        		Critter.displayWorld();
+        	} else if(splitInput[0] == "step") {
+        		stepCommand(splitInput, userInput);
+        	} else if(splitInput[0] == "seed") {
+        		
+        	} else if(splitInput[0] == "make") {
+        		makeCommand(splitInput, userInput);
+        	} else if(splitInput[0] == "stats") {
+        		
+        	} else {
+        		System.out.println("invalid command: " + userInput);
+        	}
         	userInput = kb.nextLine();
         }
         //now we will check for user commands (valid commands in instructions)
-
+        
         /* Do not alter the code above for your submission. */
         /* Write your code below. */
         
@@ -82,5 +95,57 @@ public class Main {
         /* Write your code above */
         System.out.flush();
 
+    }
+    private static void stepCommand(String[] splitInput, String userInput) {
+    	int numSteps = 1;
+		if(splitInput.length != 1) {	//user has tried to specify number of steps
+			if(splitInput.length == 2) {
+				try {
+    				numSteps = Integer.parseInt(splitInput[1]);
+    			} catch(NumberFormatException e) {
+    				numSteps = 0;
+    				System.out.println("error processing: " + userInput);
+    			}
+			} else {	//user has added extraneous information
+				System.out.println("error processing: " + userInput);
+				numSteps = 0;
+			}
+		}
+		for(int i = 0; i < numSteps; i++) {
+			Critter.worldTimeStep();
+		}
+    }
+    
+    private static void makeCommand(String[] splitInput, String userInput) {
+    	int numCritters = 1;
+    	String critterType = splitInput[1];
+    	if(splitInput.length != 2) {	//user has tried to specify number of critters
+    		if(splitInput.length == 3) {
+    			try {
+    				numCritters = Integer.parseInt(splitInput[2]);
+    			} catch(NumberFormatException e) {
+    				numCritters = 0;
+    				System.out.println("error processing: " + userInput);
+    			}
+    		} else {	//user has entered extraneous information
+    			System.out.println("error processing: " + userInput);
+    			numCritters = 0;
+    		}
+    	}
+    	boolean validCritter = true;
+    	try {
+    		Critter.makeCritter(critterType);
+    	} catch(Exception ice) {
+    		System.out.println("error processing: " + userInput);
+    		validCritter = false;
+    	}		
+    	if(validCritter) {
+    		for(int i = 1; i < numCritters; i++) {
+    			try {
+    				Critter.makeCritter(critterType);
+    			} catch(Exception ice) {	//should never be executed, validCritter eliminates need so we don't keep reprinting error message	
+    			}
+    	}
+    	}
     }
 }
