@@ -70,15 +70,15 @@ public class Main {
         //add start of controller to parse user input
         while(userInput.indexOf("quit") == -1) {
         	String[] splitInput = userInput.trim().split("\\s+");
-        	if(splitInput[0] == "show") {
+        	if(splitInput[0].equals("show")) {
         		Critter.displayWorld();
-        	} else if(splitInput[0] == "step") {
+        	} else if(splitInput[0].equals("step")) {
         		stepCommand(splitInput, userInput);
-        	} else if(splitInput[0] == "seed") {
+        	} else if(splitInput[0].equals("seed")) {
         		
-        	} else if(splitInput[0] == "make") {
+        	} else if(splitInput[0].equals("make")) {
         		makeCommand(splitInput, userInput);
-        	} else if(splitInput[0] == "stats") {
+        	} else if(splitInput[0].equals("stats")) {
         		
         	} else {
         		System.out.println("invalid command: " + userInput);
