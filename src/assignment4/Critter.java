@@ -13,6 +13,9 @@ package assignment4;
  */
 
 
+
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 /* see the PDF for descriptions of the methods and fields in this class
@@ -26,6 +29,8 @@ public abstract class Critter {
 	private	static List<Critter> population = new java.util.ArrayList<Critter>();
 	private static List<Critter> babies = new java.util.ArrayList<Critter>();
 	private static char[][] worldArray = new char[Params.world_height + 2][Params.world_width + 2];
+	private static HashMap<Coordinate, ArrayList<Critter>> critterAtLoc = new HashMap<Coordinate, ArrayList<Critter>>();
+	private static ArrayList<Coordinate> multiplyOccupied = new ArrayList<Coordinate>();
 
 	// Gets the package name.  This assumes that Critter and its subclasses are all in the same package.
 	static {
@@ -83,10 +88,23 @@ public abstract class Critter {
 			newCritter.y_coord = getRandomInt(Params.world_height);
 			newCritter.energy = Params.start_energy;
 			population.add(newCritter);
+			Coordinate loc = new Coordinate(newCritter.x_coord, newCritter.y_coord);
+			if(critterAtLoc.get(loc) == null) {	//if there are no critters at that location
+				ArrayList<Critter> critList = new ArrayList<Critter>();
+				critList.add(newCritter);
+				critterAtLoc.put(loc, critList);
+			} else {
+				critterAtLoc.get(loc).add(newCritter);
+				multiplyOccupied.add(loc);
+			}
 		} catch(Throwable error) {
 			System.err.println(error);
 			throw new InvalidCritterException(critter_class_name);
 		}
+	}
+	
+	private static void checkMultiplyOccupied() {
+		
 	}
 	
 	/**
@@ -185,8 +203,15 @@ public abstract class Critter {
 	}
 	
 	public static void worldTimeStep() {
+		int numPopulation = population.size();
+		int numBabies = babies.size();
+		for(int i = 0; i < numPopulation; i++) {
+			population.get(i).doTimeStep();	//do time step on each member of population
+		}
+		
 		// Complete this method.
 	}
+	
 	
 	/**
 	 * make empty world as 2D char array
