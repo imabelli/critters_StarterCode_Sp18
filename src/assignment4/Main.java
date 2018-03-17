@@ -79,6 +79,7 @@ public class Main {
         		
         	} else if(splitInput[0].equals("make")) {
         		makeCommand(splitInput, userInput);
+        		
         	} else if(splitInput[0].equals("stats")) {
         		
         	} else {

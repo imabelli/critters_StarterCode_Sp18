@@ -15,8 +15,10 @@ package assignment4;
 
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /* see the PDF for descriptions of the methods and fields in this class
  * you may add fields, methods or inner classes to Critter ONLY if you make your additions private
@@ -29,9 +31,9 @@ public abstract class Critter {
 	private	static List<Critter> population = new java.util.ArrayList<Critter>();
 	private static List<Critter> babies = new java.util.ArrayList<Critter>();
 	private static char[][] worldArray = new char[Params.world_height + 2][Params.world_width + 2];
-	private static HashMap<Coordinate, ArrayList<Critter>> critterAtLoc = new HashMap<Coordinate, ArrayList<Critter>>();
+	private static Map<Coordinate, ArrayList<Critter>> critterAtLoc = new HashMap<Coordinate, ArrayList<Critter>>();
 	private static ArrayList<Coordinate> multiplyOccupied = new ArrayList<Coordinate>();
-
+	private static boolean needResolveConflicts = false;
 	// Gets the package name.  This assumes that Critter and its subclasses are all in the same package.
 	static {
 		myPackage = Critter.class.getPackage().toString().split(" ")[1];
@@ -58,6 +60,80 @@ public abstract class Critter {
 	
 	
 	protected final void walk(int direction) {
+		this.energy -= Params.walk_energy_cost;
+		if(this.energy <= 0) {
+			Critter.removeThisCritter(this);
+		} else {
+			if(direction == 0) {
+				if(this.x_coord == Params.world_width - 1) {
+					this.x_coord = 0;
+				} else {
+					this.x_coord++;
+				}
+			} else if(direction == 1) {
+				if(this.x_coord == Params.world_width - 1) {
+					this.x_coord = 0;
+				} else {
+					this.x_coord++;
+				}
+				if(this.y_coord == 0) {
+					this.y_coord = Params.world_height - 1;
+				} else {
+					this.y_coord--;
+				}
+			} else if(direction == 2) {
+				if(this.y_coord == 0) {
+					this.y_coord = Params.world_height - 1;
+				} else {
+					this.y_coord--;
+				}
+			} else if(direction == 3) {
+				if(this.x_coord == 0) {
+					this.x_coord = Params.world_width - 1;
+				} else {
+					this.x_coord--;
+				}
+				if(this.y_coord == 0) {
+					this.y_coord = Params.world_height - 1;
+				} else {
+					this.y_coord--;
+				}
+			} else if(direction == 4) {
+				if(this.x_coord == 0) {
+					this.x_coord = Params.world_width - 1;
+				} else {
+					this.x_coord--;
+				}
+			} else if(direction == 5) {
+				if(this.x_coord == 0) {
+					this.x_coord = Params.world_width - 1;
+				} else {
+					this.x_coord--;
+				}
+				if(this.y_coord == Params.world_height - 1) {
+					this.y_coord = 0;
+				} else {
+					this.y_coord++;
+				}
+			} else if(direction == 6) {
+				if(this.y_coord == Params.world_height - 1) {
+					this.y_coord = 0;
+				} else {
+					this.y_coord++;
+				}
+			} else if(direction == 7) {
+				if(this.x_coord == Params.world_width - 1) {
+					this.x_coord = 0;
+				} else {
+					this.x_coord++;
+				}
+				if(this.y_coord == Params.world_height - 1) {
+					this.y_coord = 0;
+				} else {
+					this.y_coord++;
+				}
+			}
+		}
 	}
 	
 	protected final void run(int direction) {
@@ -95,7 +171,6 @@ public abstract class Critter {
 				critterAtLoc.put(loc, critList);
 			} else {
 				critterAtLoc.get(loc).add(newCritter);
-				multiplyOccupied.add(loc);
 			}
 		} catch(Throwable error) {
 			System.err.println(error);
@@ -104,7 +179,16 @@ public abstract class Critter {
 	}
 	
 	private static void checkMultiplyOccupied() {
-		
+		needResolveConflicts = false;
+		multiplyOccupied.clear(); //redefine list of multiply occupied locations at each call
+		for(Coordinate key : critterAtLoc.keySet()) {	
+			if(critterAtLoc.get(key).size() > 1) {	//if there is more than one critter at this coordinate
+				multiplyOccupied.add(key);
+			}
+		}
+		if(multiplyOccupied.size() != 0) {	//if there is a multiply occupied location
+			needResolveConflicts = true;
+		}
 	}
 	
 	/**
@@ -208,10 +292,104 @@ public abstract class Critter {
 		for(int i = 0; i < numPopulation; i++) {
 			population.get(i).doTimeStep();	//do time step on each member of population
 		}
-		
+		checkMultiplyOccupied();	//fill ArrayList with coordinates with more than 1 critter
+		while(needResolveConflicts) {
+			resolveConflicts();
+		}
+		removeAllDead();
 		// Complete this method.
 	}
 	
+	/**
+	 * resolve conflicts (multiply occupied locations) until each coordinate has at most 1 critter
+	 */
+	private static void resolveConflicts() {
+		Coordinate currentLoc = multiplyOccupied.get(0);
+		try {
+			Critter c1 = critterAtLoc.get(currentLoc).get(0);
+			Critter c2 = critterAtLoc.get(currentLoc).get(1);	//two critters to resolve encounter
+			Critter winner = null;
+			Critter loser = null;
+			boolean c1Fight = c1.fight(c2.toString());
+			boolean c2Fight = c2.fight(c1.toString());
+			int c1Roll = -1;
+			int c2Roll = -1;
+			if(c1Fight && c2Fight) {
+				c1Roll = Critter.getRandomInt(c1.energy);
+				c2Roll = Critter.getRandomInt(c2.energy);
+			} else if(c1Fight && !c2Fight) {
+				c2Roll = 0;
+				c1Roll = Critter.getRandomInt(c1.energy);
+			} else if(!c1Fight && c2Fight) {
+				c1Roll = 0;
+				c2Roll = Critter.getRandomInt(c2.energy);
+			} else if(!c1Fight && !c2Fight) {
+				//they both don't want to fight and are both still in the same position, winner arbitrarily chosen
+			}
+			if(c1Roll == c2Roll) {	//if they both roll the same number, randomly determine winner
+				int randDetermine = Critter.getRandomInt(10);
+				if(randDetermine % 2 == 0) {
+					winner = c1;
+					loser = c2;
+				} else {
+					winner = c2;
+					loser = c1;
+				}
+			} else if(c1Roll > c2Roll) {
+				winner = c1;
+				loser = c2;
+			} else if(c2Roll > c1Roll) {
+				winner = c2;
+				loser = c1;
+			}
+			try {
+				winner.energy += loser.energy/2;
+				loser.energy = 0;
+				removeThisCritter(loser);
+			} catch(Throwable e) {
+				System.out.println("winner loser null reference");
+			}
+		}
+		catch(Throwable eror) {
+			System.out.println("error in using multiply occupied arraylist as key for hashmap to get critters");
+		}
+		checkMultiplyOccupied();	//redefines multiply occupied locations
+	}
+	
+	private static void removeThisCritter(Critter toRemove) {
+		Coordinate atLoc = new Coordinate(toRemove.x_coord, toRemove.y_coord);
+		ArrayList<Critter> crittersHereList = critterAtLoc.get(atLoc);
+		if(crittersHereList == null) {
+			System.err.println("removing critter at null key in hashmap");
+		}
+		for(int i = 0; i < crittersHereList.size(); i++) {
+			if(crittersHereList.get(i).equals(toRemove)) {
+				crittersHereList.remove(i);
+				if(crittersHereList.size() == 0) {	//if there are no more critters at this location, remove that key from original hashmap
+					critterAtLoc.remove(atLoc);	
+				}
+				population.remove(toRemove);	//remove critter from population list
+				break;
+			}
+		}
+	}
+	
+	/**
+	 * removeDead removes the dead critters at the end of each world time step
+	 */
+	private static void removeAllDead() {
+		for(Coordinate key: critterAtLoc.keySet()) {	//for every populated location
+			try {
+				for(int i = 0; i < critterAtLoc.get(key).size(); i++) {		//for every critter at given location
+					if(critterAtLoc.get(key).get(i).energy <= 0) {
+						removeThisCritter(critterAtLoc.get(key).get(i));
+					}
+				}
+			} catch(Throwable e) {
+				System.out.println("empty key still in hashset null pointer issue");
+			}
+		}
+	}
 	
 	/**
 	 * make empty world as 2D char array
