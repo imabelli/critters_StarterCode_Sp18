@@ -67,9 +67,10 @@ public class Main {
             kb = new Scanner(System.in); // use keyboard and console
         }
         String userInput = kb.nextLine();
+        
+        String[] splitInput = userInput.trim().split("\\s+");
         //add start of controller to parse user input
-        while(userInput.indexOf("quit") == -1) {
-        	String[] splitInput = userInput.trim().split("\\s+");
+        while(!(splitInput[0].equals("quit") && (splitInput.length) == 1)) {
         	if(splitInput[0].equals("show")) {
         		Critter.displayWorld();
         	} else if(splitInput[0].equals("step")) {
@@ -84,6 +85,7 @@ public class Main {
         		System.out.println("invalid command: " + userInput);
         	}
         	userInput = kb.nextLine();
+        	splitInput = userInput.trim().split("\\s+");
         }
         //now we will check for user commands (valid commands in instructions)
         
@@ -135,7 +137,7 @@ public class Main {
     	boolean validCritter = true;
     	try {
     		Critter.makeCritter(critterType);
-    	} catch(Exception ice) {
+    	} catch(InvalidCritterException ice) {
     		System.out.println("error processing: " + userInput);
     		validCritter = false;
     	}		
@@ -143,7 +145,7 @@ public class Main {
     		for(int i = 1; i < numCritters; i++) {
     			try {
     				Critter.makeCritter(critterType);
-    			} catch(Exception ice) {	//should never be executed, validCritter eliminates need so we don't keep reprinting error message	
+    			} catch(InvalidCritterException ice) {	//should never be executed, validCritter eliminates need so we don't keep reprinting error message	
     			}
     	}
     	}

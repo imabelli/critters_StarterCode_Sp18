@@ -51,6 +51,7 @@ public abstract class Critter {
 	private int x_coord;
 	private int y_coord;
 	
+	
 	protected final void walk(int direction) {
 	}
 	
@@ -75,6 +76,17 @@ public abstract class Critter {
 	 * @throws InvalidCritterException
 	 */
 	public static void makeCritter(String critter_class_name) throws InvalidCritterException {
+		try {
+			String className = "assignment4." + critter_class_name;
+			Critter newCritter = (Critter) Class.forName(className).newInstance();
+			newCritter.x_coord = getRandomInt(Params.world_width);
+			newCritter.y_coord = getRandomInt(Params.world_height);
+			newCritter.energy = Params.start_energy;
+			population.add(newCritter);
+		} catch(Throwable error) {
+			System.err.println(error);
+			throw new InvalidCritterException(critter_class_name);
+		}
 	}
 	
 	/**
