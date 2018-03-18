@@ -35,7 +35,9 @@ public abstract class Critter {
 	private static Map<Coordinate, ArrayList<Critter>> critterAtLocMap = new HashMap<Coordinate, ArrayList<Critter>>();
 	private static ArrayList<Coordinate> multiplyOccupied = new ArrayList<Coordinate>();
 	private static boolean needResolveConflicts = false;
-	// Gets the package name.  This assumes that Critter and its subclasses are all in the same package.
+	private boolean deadToRemove = false;	//dead, to be removed at end of time step. doesn't result in conflicts
+	private boolean movedThisStep = false;
+	
 	static {
 		myPackage = Critter.class.getPackage().toString().split(" ")[1];
 	}
@@ -64,8 +66,10 @@ public abstract class Critter {
 		this.energy -= Params.walk_energy_cost;
 		removeThisCritter(this, true);	//remove Critter from previous location in map of locs and critters
 		if(this.energy <= 0) {
-			Critter.removeThisCritter(this, false);
+			deadToRemove = true;	
+			//Critter.removeThisCritter(this, false);
 		} else {
+			movedThisStep = true;
 			if(direction == 0) {
 				if(this.x_coord == Params.world_width - 1) {
 					this.x_coord = 0;
@@ -148,11 +152,14 @@ public abstract class Critter {
 	
 	protected final void run(int direction) {
 		this.energy += (2*Params.walk_energy_cost);	//add energy that will be deducted from walking
-		this.walk(direction);
-		this.walk(direction);
 		this.energy -= Params.run_energy_cost;	//deduct run energy cost
 		if(this.energy <= 0) {
-			Critter.removeThisCritter(this, false);
+			deadToRemove = true;
+			//Critter.removeThisCritter(this, false);
+		} else {
+			this.walk(direction);
+			this.walk(direction);
+			movedThisStep = true;
 		}
 	}
 	
@@ -171,7 +178,6 @@ public abstract class Critter {
 					childX = 0;
 				} else {
 					childX = this.x_coord + 1;
-					
 				}
 				childY = this.y_coord;
 			} else if(direction == 1) {
@@ -241,14 +247,16 @@ public abstract class Critter {
 					childY = this.y_coord + 1;
 				}
 			}
-			Coordinate newLoc = new Coordinate(childX, childY);
-			if(critterAtLocMap.get(newLoc) == null) {	//if there are no critters at that location
-				ArrayList<Critter> critList = new ArrayList<Critter>();
-				critList.add(offspring);
-				critterAtLocMap.put(newLoc, critList);
-			} else {
-				critterAtLocMap.get(newLoc).add(offspring);
-			}
+			offspring.x_coord = childX;
+			offspring.y_coord = childY;
+//			Coordinate newLoc = new Coordinate(childX, childY);
+//			if(critterAtLocMap.get(newLoc) == null) {	//if there are no critters at that location
+//				ArrayList<Critter> critList = new ArrayList<Critter>();
+//				critList.add(offspring);
+//				critterAtLocMap.put(newLoc, critList);
+//			} else {
+//				critterAtLocMap.get(newLoc).add(offspring);
+//			}
 			babies.add(offspring);
 		}
 	}
@@ -292,13 +300,23 @@ public abstract class Critter {
 		needResolveConflicts = false;
 		multiplyOccupied.clear(); //redefine list of multiply occupied locations at each call
 		for(Coordinate key : critterAtLocMap.keySet()) {	
-			if(critterAtLocMap.get(key).size() > 1) {	//if there is more than one critter at this coordinate
+			if(countNumAliveAtLocation(key) > 1) {//if there is more than one critter at this coordinate
 				multiplyOccupied.add(key);
 			}
 		}
 		if(multiplyOccupied.size() != 0) {	//if there is a multiply occupied location
 			needResolveConflicts = true;
 		}
+	}
+	
+	private static int countNumAliveAtLocation(Coordinate coord) {
+		int numAlive = 0;
+		for(int i = 0; i < critterAtLocMap.get(coord).size(); i++) {
+			if(!(critterAtLocMap.get(coord).get(i).deadToRemove)) {
+				numAlive++;
+			}
+		}
+		return numAlive;
 	}
 	
 	/**
@@ -351,7 +369,8 @@ public abstract class Critter {
 		protected void setEnergy(int new_energy_value) {
 			super.energy = new_energy_value;
 			if(new_energy_value <= 0) {
-				super.removeThisCritter(this, false);
+				super.deadToRemove = true;
+				//super.removeThisCritter(this, false);
 			}
 		}
 		
@@ -444,7 +463,16 @@ public abstract class Critter {
 		}
 		for(int i = 0; i < babies.size(); i++) {
 			population.add(babies.get(i));
+			Coordinate newLoc = new Coordinate(babies.get(i).x_coord, babies.get(i).y_coord);	//add babies to the map
+			if(critterAtLocMap.get(newLoc) == null) {	//if there are no critters at that location
+				ArrayList<Critter> critList = new ArrayList<Critter>();
+				critList.add(babies.get(i));
+				critterAtLocMap.put(newLoc, critList);
+			} else {
+				critterAtLocMap.get(newLoc).add(babies.get(i));
+			}
 		}
+		
 		babies.clear();
 		// Complete this method.
 	}
@@ -455,8 +483,25 @@ public abstract class Critter {
 	private static void resolveConflicts() {
 		Coordinate currentLoc = multiplyOccupied.get(0);
 		try {
-			Critter c1 = critterAtLocMap.get(currentLoc).get(0);
-			Critter c2 = critterAtLocMap.get(currentLoc).get(1);	//two critters to resolve encounter
+			int indexFirstAlive = -1;
+			int indexSecondAlive = -1;
+			for(int i = 0; i < critterAtLocMap.get(currentLoc).size(); i++) {
+				if(!critterAtLocMap.get(currentLoc).get(i).deadToRemove) {
+					indexFirstAlive= i;
+					break;
+				}
+			}
+			for(int i = indexFirstAlive + 1; i < critterAtLocMap.get(currentLoc).size(); i++) {
+				if(!critterAtLocMap.get(currentLoc).get(i).deadToRemove) {
+					indexSecondAlive = i;
+					break;
+				}
+			}
+			if(indexFirstAlive == -1 || indexSecondAlive == -1) {
+				System.err.println("encounter not found when it's supposed to be found");
+			}
+			Critter c1 = critterAtLocMap.get(currentLoc).get(indexFirstAlive);
+			Critter c2 = critterAtLocMap.get(currentLoc).get(indexSecondAlive);	//two critters to resolve encounter
 			Critter winner = null;
 			Critter loser = null;
 			boolean c1Fight = c1.fight(c2.toString());
@@ -494,7 +539,8 @@ public abstract class Critter {
 			try {
 				winner.energy += loser.energy/2;
 				loser.energy = 0;
-				removeThisCritter(loser, false);
+				loser.deadToRemove = true;
+				//removeThisCritter(loser, false);
 			} catch(Throwable e) {
 				System.out.println("winner loser null reference: " + e);
 			}
@@ -545,16 +591,22 @@ public abstract class Critter {
 	 * removeDead removes the dead critters at the end of each world time step
 	 */
 	private static void removeAllDead() {
+		int numToRemove = 0;
+		List<Critter> toBeRemoved = new ArrayList<Critter>();
 		for(Coordinate key: critterAtLocMap.keySet()) {	//for every populated location
 			try {
 				for(int i = 0; i < critterAtLocMap.get(key).size(); i++) {		//for every critter at given location
-					if(critterAtLocMap.get(key).get(i).energy <= 0) {
-						removeThisCritter(critterAtLocMap.get(key).get(i), false);
+					if(critterAtLocMap.get(key).get(i).energy <= 0 || critterAtLocMap.get(key).get(i).deadToRemove == true) {
+						toBeRemoved.add(critterAtLocMap.get(key).get(i));
+						numToRemove++;
 					}
 				}
-			} catch(Throwable e) {
-				System.out.println("empty key still in hashset null pointer issue");
+			} catch(Exception e) {
+				System.out.println("remove all dead: " + e.getStackTrace());
 			}
+		}
+		for(int i = 0; i < toBeRemoved.size(); i++) {
+			removeThisCritter(toBeRemoved.get(i), false);
 		}
 	}
 	
