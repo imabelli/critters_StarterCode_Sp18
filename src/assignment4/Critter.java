@@ -19,6 +19,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /* see the PDF for descriptions of the methods and fields in this class
  * you may add fields, methods or inner classes to Critter ONLY if you make your additions private
@@ -172,6 +173,7 @@ public abstract class Critter {
 					childX = this.x_coord + 1;
 					
 				}
+				childY = this.y_coord;
 			} else if(direction == 1) {
 				if(this.x_coord == Params.world_width - 1) {
 					childX = 0;
@@ -190,6 +192,7 @@ public abstract class Critter {
 				} else {
 					childY = this.y_coord - 1;
 				}
+				childX = this.x_coord;
 			} else if(direction == 3) {
 				if(this.x_coord == 0) {
 					childX = Params.world_width - 1;
@@ -207,6 +210,7 @@ public abstract class Critter {
 				} else {
 					childX = this.x_coord - 1;
 				}
+				childY = this.y_coord;
 			} else if(direction == 5) {
 				if(this.x_coord == 0) {
 					childX = Params.world_width - 1;
@@ -224,6 +228,7 @@ public abstract class Critter {
 				} else {
 					childY = this.y_coord + 1;
 				}
+				childX = this.x_coord;
 			} else if(direction == 7) {
 				if(this.x_coord == Params.world_width - 1) {
 					childX = 0;
@@ -244,6 +249,7 @@ public abstract class Critter {
 			} else {
 				critterAtLocMap.get(newLoc).add(offspring);
 			}
+			babies.add(offspring);
 		}
 	}
 
@@ -363,6 +369,7 @@ public abstract class Critter {
 			for(int i = 0; i < numSteps; i++) {
 				walk(direction);
 			}
+			System.out.println("");
 		}	
 		
 		protected void setY_coord(int new_y_coord) {
@@ -418,10 +425,9 @@ public abstract class Critter {
 	
 	public static void worldTimeStep() {
 		int numPopulation = population.size();
-		int numBabies = babies.size();
-		for(int i = 0; i < numPopulation; i++) {
-			population.get(i).doTimeStep();	//do time step on each member of population
-			population.get(i).energy -= Params.rest_energy_cost;
+		for(Critter c: population) {
+			c.doTimeStep();	//do time step on each member of population
+			c.energy -= Params.rest_energy_cost;
 		}
 		checkMultiplyOccupied();	//fill ArrayList with coordinates with more than 1 critter
 		while(needResolveConflicts) {
@@ -436,6 +442,10 @@ public abstract class Critter {
 				System.out.println("error making algae");
 			}
 		}
+		for(int i = 0; i < babies.size(); i++) {
+			population.add(babies.get(i));
+		}
+		babies.clear();
 		// Complete this method.
 	}
 	
@@ -486,11 +496,13 @@ public abstract class Critter {
 				loser.energy = 0;
 				removeThisCritter(loser, false);
 			} catch(Throwable e) {
-				System.out.println("winner loser null reference");
+				System.out.println("winner loser null reference: " + e);
 			}
 		}
-		catch(Throwable eror) {
-			System.out.println("error in using multiply occupied arraylist as key for hashmap to get critters");
+		catch(Exception eror) {
+			System.out.println("error in using multiplly occupied arraylist as key for hashmap to get critters: " );
+			System.out.println(eror.getStackTrace());;
+			//System.exit(1);
 		}
 		checkMultiplyOccupied();	//redefines multiply occupied locations
 	}
@@ -498,8 +510,21 @@ public abstract class Critter {
 	private static void removeThisCritter(Critter toRemove, boolean justMoving) {
 		Coordinate atLoc = new Coordinate(toRemove.x_coord, toRemove.y_coord);
 		ArrayList<Critter> crittersHereList = critterAtLocMap.get(atLoc);
+		
+		Set<Coordinate> keySet = critterAtLocMap.keySet();
+		System.out.println("All locations");
+		for (Coordinate cord :  keySet) {
+			System.out.println(cord + ": " + critterAtLocMap.get(cord).size());
+		}
+		if(!justMoving) {
+			System.out.println("coordinate to remove: " +  atLoc);	
+		}
+			
+		
 		if(crittersHereList == null) {
 			System.err.println("removing critter at null key in hashmap");
+		} else {
+			System.out.println(" crittersHereList.size(): " +  crittersHereList.size());
 		}
 		for(int i = 0; i < crittersHereList.size(); i++) {
 			if(crittersHereList.get(i).equals(toRemove)) {

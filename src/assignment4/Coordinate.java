@@ -1,8 +1,8 @@
 package assignment4;
 
 public class Coordinate implements Comparable{
-	private int x_coord;
-	private int y_coord;
+	protected int x_coord;
+	protected int y_coord;
 	public Coordinate(int x, int y) {
 		x_coord = x;
 		y_coord = y;
@@ -10,6 +10,10 @@ public class Coordinate implements Comparable{
 	@Override
 	public int hashCode() {
 		return ("" + x_coord + "|" +  y_coord).hashCode();
+	}
+	@Override
+	public String toString() {
+		return "x: " + x_coord + "      y: " + y_coord;
 	}
 	@Override
 	public boolean equals(Object o) {
