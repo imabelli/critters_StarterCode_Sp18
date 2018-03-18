@@ -82,7 +82,9 @@ public class Main {
         		
         	} else if(splitInput[0].equals("stats")) {
         		
-        	} else {
+        	}  else if(splitInput[0].equals("seed")) {
+        		
+        	}else {
         		System.out.println("invalid command: " + userInput);
         	}
         	userInput = kb.nextLine();
@@ -118,6 +120,26 @@ public class Main {
 			Critter.worldTimeStep();
 		}
     }
+    
+    private static void seedCommand(String[] splitInput, String userInput) {
+    	int seed = 1;
+		if(splitInput.length != 1) {	//user has tried to specify number of steps
+			if(splitInput.length == 2) {
+				try {
+    				seed = Integer.parseInt(splitInput[1]);
+    				Critter.setSeed(seed);
+    			} catch(NumberFormatException e) {
+    				seed = 0;
+    				System.out.println("error processing: " + userInput);
+    			}
+
+			} else {	//user has added extraneous information
+				System.out.println("error processing: " + userInput);
+				seed = 0;
+			}
+		}
+    }
+    
     
     private static void makeCommand(String[] splitInput, String userInput) {
     	int numCritters = 1;
