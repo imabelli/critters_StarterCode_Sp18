@@ -31,7 +31,7 @@ public abstract class Critter {
 	private	static List<Critter> population = new java.util.ArrayList<Critter>();
 	private static List<Critter> babies = new java.util.ArrayList<Critter>();
 	private static char[][] worldArray = new char[Params.world_height + 2][Params.world_width + 2];
-	private static Map<Coordinate, ArrayList<Critter>> critterAtLoc = new HashMap<Coordinate, ArrayList<Critter>>();
+	private static Map<Coordinate, ArrayList<Critter>> critterAtLocMap = new HashMap<Coordinate, ArrayList<Critter>>();
 	private static ArrayList<Coordinate> multiplyOccupied = new ArrayList<Coordinate>();
 	private static boolean needResolveConflicts = false;
 	// Gets the package name.  This assumes that Critter and its subclasses are all in the same package.
@@ -60,9 +60,11 @@ public abstract class Critter {
 	
 	
 	protected final void walk(int direction) {
+		Coordinate oldLoc = new Coordinate(this.x_coord, this.y_coord);
 		this.energy -= Params.walk_energy_cost;
+		removeThisCritter(this, true);	//remove Critter from previous location in map of locs and critters
 		if(this.energy <= 0) {
-			Critter.removeThisCritter(this);
+			Critter.removeThisCritter(this, false);
 		} else {
 			if(direction == 0) {
 				if(this.x_coord == Params.world_width - 1) {
@@ -133,11 +135,25 @@ public abstract class Critter {
 					this.y_coord++;
 				}
 			}
+			Coordinate newLoc = new Coordinate(this.x_coord, this.y_coord);
+			if(critterAtLocMap.get(newLoc) == null) {	//if there are no critters at that location
+				ArrayList<Critter> critList = new ArrayList<Critter>();
+				critList.add(this);
+				critterAtLocMap.put(newLoc, critList);
+			} else {
+				critterAtLocMap.get(newLoc).add(this);
+			}
 		}
 	}
 	
 	protected final void run(int direction) {
-		
+		this.energy += (2*Params.walk_energy_cost);	//add energy that will be deducted from walking
+		this.walk(direction);
+		this.walk(direction);
+		this.energy -= Params.run_energy_cost;	//deduct run energy cost
+		if(this.energy <= 0) {
+			Critter.removeThisCritter(this, false);
+		}
 	}
 	
 	protected final void reproduce(Critter offspring, int direction) {
@@ -162,15 +178,17 @@ public abstract class Critter {
 			Critter newCritter = (Critter) Class.forName(className).newInstance();
 			newCritter.x_coord = getRandomInt(Params.world_width);
 			newCritter.y_coord = getRandomInt(Params.world_height);
+			newCritter.x_coord = 2;	//isa
+			newCritter.y_coord = 2;	//isa
 			newCritter.energy = Params.start_energy;
 			population.add(newCritter);
 			Coordinate loc = new Coordinate(newCritter.x_coord, newCritter.y_coord);
-			if(critterAtLoc.get(loc) == null) {	//if there are no critters at that location
+			if(critterAtLocMap.get(loc) == null) {	//if there are no critters at that location
 				ArrayList<Critter> critList = new ArrayList<Critter>();
 				critList.add(newCritter);
-				critterAtLoc.put(loc, critList);
+				critterAtLocMap.put(loc, critList);
 			} else {
-				critterAtLoc.get(loc).add(newCritter);
+				critterAtLocMap.get(loc).add(newCritter);
 			}
 		} catch(Throwable error) {
 			System.err.println(error);
@@ -181,8 +199,8 @@ public abstract class Critter {
 	private static void checkMultiplyOccupied() {
 		needResolveConflicts = false;
 		multiplyOccupied.clear(); //redefine list of multiply occupied locations at each call
-		for(Coordinate key : critterAtLoc.keySet()) {	
-			if(critterAtLoc.get(key).size() > 1) {	//if there is more than one critter at this coordinate
+		for(Coordinate key : critterAtLocMap.keySet()) {	
+			if(critterAtLocMap.get(key).size() > 1) {	//if there is more than one critter at this coordinate
 				multiplyOccupied.add(key);
 			}
 		}
@@ -291,6 +309,7 @@ public abstract class Critter {
 		int numBabies = babies.size();
 		for(int i = 0; i < numPopulation; i++) {
 			population.get(i).doTimeStep();	//do time step on each member of population
+			population.get(i).energy -= Params.rest_energy_cost;
 		}
 		checkMultiplyOccupied();	//fill ArrayList with coordinates with more than 1 critter
 		while(needResolveConflicts) {
@@ -306,8 +325,8 @@ public abstract class Critter {
 	private static void resolveConflicts() {
 		Coordinate currentLoc = multiplyOccupied.get(0);
 		try {
-			Critter c1 = critterAtLoc.get(currentLoc).get(0);
-			Critter c2 = critterAtLoc.get(currentLoc).get(1);	//two critters to resolve encounter
+			Critter c1 = critterAtLocMap.get(currentLoc).get(0);
+			Critter c2 = critterAtLocMap.get(currentLoc).get(1);	//two critters to resolve encounter
 			Critter winner = null;
 			Critter loser = null;
 			boolean c1Fight = c1.fight(c2.toString());
@@ -345,7 +364,7 @@ public abstract class Critter {
 			try {
 				winner.energy += loser.energy/2;
 				loser.energy = 0;
-				removeThisCritter(loser);
+				removeThisCritter(loser, false);
 			} catch(Throwable e) {
 				System.out.println("winner loser null reference");
 			}
@@ -356,9 +375,9 @@ public abstract class Critter {
 		checkMultiplyOccupied();	//redefines multiply occupied locations
 	}
 	
-	private static void removeThisCritter(Critter toRemove) {
+	private static void removeThisCritter(Critter toRemove, boolean justMoving) {
 		Coordinate atLoc = new Coordinate(toRemove.x_coord, toRemove.y_coord);
-		ArrayList<Critter> crittersHereList = critterAtLoc.get(atLoc);
+		ArrayList<Critter> crittersHereList = critterAtLocMap.get(atLoc);
 		if(crittersHereList == null) {
 			System.err.println("removing critter at null key in hashmap");
 		}
@@ -366,9 +385,12 @@ public abstract class Critter {
 			if(crittersHereList.get(i).equals(toRemove)) {
 				crittersHereList.remove(i);
 				if(crittersHereList.size() == 0) {	//if there are no more critters at this location, remove that key from original hashmap
-					critterAtLoc.remove(atLoc);	
+					critterAtLocMap.remove(atLoc);	
 				}
-				population.remove(toRemove);	//remove critter from population list
+				if(!justMoving) {
+					population.remove(toRemove);	//if we are killing the critter, remove it from population
+				}
+					//remove critter from population list
 				break;
 			}
 		}
@@ -378,11 +400,11 @@ public abstract class Critter {
 	 * removeDead removes the dead critters at the end of each world time step
 	 */
 	private static void removeAllDead() {
-		for(Coordinate key: critterAtLoc.keySet()) {	//for every populated location
+		for(Coordinate key: critterAtLocMap.keySet()) {	//for every populated location
 			try {
-				for(int i = 0; i < critterAtLoc.get(key).size(); i++) {		//for every critter at given location
-					if(critterAtLoc.get(key).get(i).energy <= 0) {
-						removeThisCritter(critterAtLoc.get(key).get(i));
+				for(int i = 0; i < critterAtLocMap.get(key).size(); i++) {		//for every critter at given location
+					if(critterAtLocMap.get(key).get(i).energy <= 0) {
+						removeThisCritter(critterAtLocMap.get(key).get(i), false);
 					}
 				}
 			} catch(Throwable e) {
@@ -420,11 +442,11 @@ public abstract class Critter {
 	private static void populateWorldView() {
 		for(int i = 0; i < population.size(); i++) {
 			Critter currentCritter = population.get(i);
-			worldArray[currentCritter.x_coord + 1][currentCritter.y_coord + 1] = currentCritter.toString().charAt(0);
+			worldArray[currentCritter.y_coord + 1][currentCritter.x_coord + 1] = currentCritter.toString().charAt(0);
 		}
 		for(int i = 0; i < babies.size(); i++) {
 			Critter currentCritter = babies.get(i);
-			worldArray[currentCritter.x_coord + 1][currentCritter.y_coord + 1] = currentCritter.toString().charAt(0);
+			worldArray[currentCritter.y_coord + 1][currentCritter.x_coord + 1] = currentCritter.toString().charAt(0);
 		}
 	}
 	
