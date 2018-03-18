@@ -178,8 +178,6 @@ public abstract class Critter {
 			Critter newCritter = (Critter) Class.forName(className).newInstance();
 			newCritter.x_coord = getRandomInt(Params.world_width);
 			newCritter.y_coord = getRandomInt(Params.world_height);
-			newCritter.x_coord = 2;	//isa
-			newCritter.y_coord = 2;	//isa
 			newCritter.energy = Params.start_energy;
 			population.add(newCritter);
 			Coordinate loc = new Coordinate(newCritter.x_coord, newCritter.y_coord);
@@ -258,14 +256,40 @@ public abstract class Critter {
 	static abstract class TestCritter extends Critter {
 		protected void setEnergy(int new_energy_value) {
 			super.energy = new_energy_value;
+			if(new_energy_value <= 0) {
+				super.removeThisCritter(this, false);
+			}
 		}
 		
 		protected void setX_coord(int new_x_coord) {
-			super.x_coord = new_x_coord;
-		}
+			int direction = -1;
+			if(new_x_coord > super.x_coord) {
+				direction = 0;
+				
+			} else if(new_x_coord < super.x_coord) {
+				direction = 4;
+			}
+			int numSteps = Math.abs(new_x_coord - super.x_coord);
+			int addEnergy = numSteps*Params.walk_energy_cost;	//so that we can use walk function
+			super.energy += addEnergy;
+			for(int i = 0; i < numSteps; i++) {
+				walk(direction);
+			}
+		}	
 		
 		protected void setY_coord(int new_y_coord) {
-			super.y_coord = new_y_coord;
+			int direction = -1;
+			if(new_y_coord > super.y_coord) {
+				direction = 2;
+			} else if(new_y_coord < super.y_coord) {
+				direction = 6;
+			}
+			int numSteps = Math.abs(new_y_coord - super.y_coord);
+			int addEnergy = numSteps*Params.walk_energy_cost;	//so that we can use walk function
+			super.energy += addEnergy;
+			for(int i = 0; i < numSteps; i++) {
+				walk(direction);
+			}
 		}
 		
 		protected int getX_coord() {
@@ -316,6 +340,14 @@ public abstract class Critter {
 			resolveConflicts();
 		}
 		removeAllDead();
+		for(int i = 0; i < Params.refresh_algae_count; i++) {
+			try {
+				makeCritter("Algae");
+			}
+			catch(Throwable e) {
+				System.out.println("error making algae");
+			}
+		}
 		// Complete this method.
 	}
 	
