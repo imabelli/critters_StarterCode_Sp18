@@ -60,7 +60,6 @@ public abstract class Critter {
 	
 	
 	protected final void walk(int direction) {
-		Coordinate oldLoc = new Coordinate(this.x_coord, this.y_coord);
 		this.energy -= Params.walk_energy_cost;
 		removeThisCritter(this, true);	//remove Critter from previous location in map of locs and critters
 		if(this.energy <= 0) {
@@ -157,6 +156,95 @@ public abstract class Critter {
 	}
 	
 	protected final void reproduce(Critter offspring, int direction) {
+		int parentEnergy = this.energy;
+		if(parentEnergy >= Params.min_reproduce_energy) {
+			offspring.energy = parentEnergy/2;
+			this.energy = parentEnergy/2;
+			if(this.energy*2 < parentEnergy) {
+				this.energy++;	//round up
+			}
+			int childX = -1;
+			int childY = -1;
+			if(direction == 0) {
+				if(this.x_coord == Params.world_width - 1) {
+					childX = 0;
+				} else {
+					childX = this.x_coord + 1;
+					
+				}
+			} else if(direction == 1) {
+				if(this.x_coord == Params.world_width - 1) {
+					childX = 0;
+				} else {
+					childX = this.x_coord + 1;
+					
+				}
+				if(this.y_coord == 0) {
+					childY = Params.world_height - 1;
+				} else {
+					childY = this.y_coord - 1;
+				}
+			} else if(direction == 2) {
+				if(this.y_coord == 0) {
+					childY = Params.world_height - 1;
+				} else {
+					childY = this.y_coord - 1;
+				}
+			} else if(direction == 3) {
+				if(this.x_coord == 0) {
+					childX = Params.world_width - 1;
+				} else {
+					childX = this.x_coord - 1;
+				}
+				if(this.y_coord == 0) {
+					childY = Params.world_height - 1;
+				} else {
+					childY = this.y_coord;
+				}
+			} else if(direction == 4) {
+				if(this.x_coord == 0) {
+					childX = Params.world_width - 1;
+				} else {
+					childX = this.x_coord - 1;
+				}
+			} else if(direction == 5) {
+				if(this.x_coord == 0) {
+					childX = Params.world_width - 1;
+				} else {
+					childX = this.x_coord - 1;
+				}
+				if(this.y_coord == Params.world_height - 1) {
+					childY = 0;
+				} else {
+					childY = this.y_coord + 1;
+				}
+			} else if(direction == 6) {
+				if(this.y_coord == Params.world_height - 1) {
+					childY = 0;
+				} else {
+					childY = this.y_coord + 1;
+				}
+			} else if(direction == 7) {
+				if(this.x_coord == Params.world_width - 1) {
+					childX = 0;
+				} else {
+					childX = this.x_coord + 1;
+				}
+				if(this.y_coord == Params.world_height - 1) {
+					childY = 0;
+				} else {
+					childY = this.y_coord + 1;
+				}
+			}
+			Coordinate newLoc = new Coordinate(childX, childY);
+			if(critterAtLocMap.get(newLoc) == null) {	//if there are no critters at that location
+				ArrayList<Critter> critList = new ArrayList<Critter>();
+				critList.add(offspring);
+				critterAtLocMap.put(newLoc, critList);
+			} else {
+				critterAtLocMap.get(newLoc).add(offspring);
+			}
+		}
 	}
 
 	public abstract void doTimeStep();
