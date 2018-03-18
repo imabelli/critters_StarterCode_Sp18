@@ -12,7 +12,9 @@ package assignment4;
  * Fall 2016
  */
 
+import java.util.ArrayList;
 import java.util.Scanner;
+import java.util.List;
 import java.io.*;
 
 
@@ -81,9 +83,9 @@ public class Main {
         		makeCommand(splitInput, userInput);
         		
         	} else if(splitInput[0].equals("stats")) {
-        		
+        		statsCommand(splitInput, userInput);
         	}  else if(splitInput[0].equals("seed")) {
-        		
+        		seedCommand(splitInput, userInput);
         	}else {
         		System.out.println("invalid command: " + userInput);
         	}
@@ -100,6 +102,21 @@ public class Main {
         /* Write your code above */
         System.out.flush();
 
+    }
+    private static void statsCommand(String[] splitInput, String userInput) {
+    	if(splitInput.length != 2) {	
+    		System.out.println("error processing: " + userInput);
+    	}
+    	String className = splitInput[1];
+    	boolean validCritter = true;
+    	List<Critter> instances;
+    	try {
+    		instances = Critter.getInstances(className);
+    	} catch(InvalidCritterException ice) {
+    		System.out.println("error processing: " + userInput);
+    		validCritter = false;
+    	}		
+    
     }
     private static void stepCommand(String[] splitInput, String userInput) {
     	int numSteps = 1;

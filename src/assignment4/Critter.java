@@ -14,6 +14,7 @@ package assignment4;
 
 
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -327,7 +328,21 @@ public abstract class Critter {
 	 */
 	public static List<Critter> getInstances(String critter_class_name) throws InvalidCritterException {
 		List<Critter> result = new java.util.ArrayList<Critter>();
-	
+		try {
+			Class<?> critterClass = Class.forName("assignment4." + critter_class_name);
+			for(int i = 0; i < population.size(); i++) {
+				if( critterClass.isInstance((population.get(i)))) {
+					result.add(population.get(i));;
+				}
+			}	
+			
+			Method method = critterClass.getMethod("runStats", List.class);
+			Object o = method.invoke(null, result);
+		}
+		catch(Exception e) {
+			System.out.println(e.getStackTrace());
+		}
+
 		return result;
 	}
 	
