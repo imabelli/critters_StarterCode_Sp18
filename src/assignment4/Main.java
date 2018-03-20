@@ -32,12 +32,12 @@ public class Main {
     private static boolean DEBUG = false; // Use it or not, as you wish!
     static PrintStream old = System.out;	// if you want to restore output to console
 
-
+  
     // Gets the package name.  The usage assumes that Critter and its subclasses are all in the same package.
     static {
         myPackage = Critter.class.getPackage().toString().split(" ")[1];
     }
-
+    
     /**
      * Main method.
      * @param args args can be empty.  If not empty, provide two parameters -- the first is a file name, 
@@ -68,6 +68,7 @@ public class Main {
         } else { // if no arguments to main
             kb = new Scanner(System.in); // use keyboard and console
         }
+        System.out.println("critters>");
         String userInput = kb.nextLine();
         
         String[] splitInput = userInput.trim().split("\\s+");
@@ -78,10 +79,9 @@ public class Main {
         	} else if(splitInput[0].equals("step")) {
         		stepCommand(splitInput, userInput);
         	} else if(splitInput[0].equals("seed")) {
-        		
+        		seedCommand(splitInput, userInput);
         	} else if(splitInput[0].equals("make")) {
         		makeCommand(splitInput, userInput);
-        		
         	} else if(splitInput[0].equals("stats")) {
         		statsCommand(splitInput, userInput);
         	}  else if(splitInput[0].equals("seed")) {
@@ -89,6 +89,7 @@ public class Main {
         	}else {
         		System.out.println("invalid command: " + userInput);
         	}
+        	System.out.println("critters>");
         	userInput = kb.nextLine();
         	splitInput = userInput.trim().split("\\s+");
         }
@@ -149,7 +150,6 @@ public class Main {
     				seed = 0;
     				System.out.println("error processing: " + userInput);
     			}
-
 			} else {	//user has added extraneous information
 				System.out.println("error processing: " + userInput);
 				seed = 0;

@@ -172,6 +172,9 @@ public abstract class Critter {
 			if(this.energy*2 < parentEnergy) {
 				this.energy++;	//round up
 			}
+			if(this.energy <= 0) {
+				deadToRemove = true;
+			}
 			int childX = -1;
 			int childY = -1;
 			if(direction == 0) {
@@ -342,7 +345,6 @@ public abstract class Critter {
 		catch(Exception e) {
 			System.out.println(e.getStackTrace());
 		}
-
 		return result;
 	}
 	
@@ -393,7 +395,6 @@ public abstract class Critter {
 			int direction = -1;
 			if(new_x_coord > super.x_coord) {
 				direction = 0;
-				
 			} else if(new_x_coord < super.x_coord) {
 				direction = 4;
 			}
@@ -403,6 +404,7 @@ public abstract class Critter {
 			for(int i = 0; i < numSteps; i++) {
 				walk(direction);
 			}
+			//this.movedThisStep = false;
 			System.out.println("");
 		}	
 		
@@ -419,6 +421,7 @@ public abstract class Critter {
 			for(int i = 0; i < numSteps; i++) {
 				walk(direction);
 			}
+			//this.movedThisStep = false;
 		}
 		
 		protected int getX_coord() {
@@ -460,12 +463,14 @@ public abstract class Critter {
 	public static void worldTimeStep() {
 		int numPopulation = population.size();
 		for(Critter c: population) {
-			c.doTimeStep();	//do time step on each member of population
-			c.energy -= Params.rest_energy_cost;
+			c.doTimeStep();	//do time step on each member of population	
 		}
 		checkMultiplyOccupied();	//fill ArrayList with coordinates with more than 1 critter
 		while(needResolveConflicts) {
 			resolveConflicts();
+		}
+		for(Critter c : population) {
+			c.energy -= Params.rest_energy_cost;
 		}
 		removeAllDead();
 		for(int i = 0; i < Params.refresh_algae_count; i++) {
@@ -523,42 +528,46 @@ public abstract class Critter {
 			boolean c2Fight = c2.fight(c1.toString());
 			int c1Roll = -1;
 			int c2Roll = -1;
-			if(c1Fight && c2Fight) {
-				c1Roll = Critter.getRandomInt(c1.energy);
-				c2Roll = Critter.getRandomInt(c2.energy);
-			} else if(c1Fight && !c2Fight) {
-				c2Roll = 0;
-				c1Roll = Critter.getRandomInt(c1.energy);
-			} else if(!c1Fight && c2Fight) {
-				c1Roll = 0;
-				c2Roll = Critter.getRandomInt(c2.energy);
-			} else if(!c1Fight && !c2Fight) {
-				//they both don't want to fight and are both still in the same position, winner arbitrarily chosen
-			}
-			if(c1Roll == c2Roll) {	//if they both roll the same number, randomly determine winner
-				int randDetermine = Critter.getRandomInt(10);
-				if(randDetermine % 2 == 0) {
+			if((!c1.deadToRemove && !c2.deadToRemove) && (c1.x_coord == c2.x_coord) && (c1.y_coord == c2.y_coord)) {
+				if(c1Fight && c2Fight) {
+					c1Roll = Critter.getRandomInt(c1.energy);
+					c2Roll = Critter.getRandomInt(c2.energy);
+				} else if(c1Fight && !c2Fight) {
+					c2Roll = 0;
+					c1Roll = Critter.getRandomInt(c1.energy);
+				} else if(!c1Fight && c2Fight) {
+					c1Roll = 0;
+					c2Roll = Critter.getRandomInt(c2.energy);
+				} else if(!c1Fight && !c2Fight) {
+					c1Roll = 0;
+					c2Roll = 0;
+					//they both don't want to fight and are both still in the same position, winner arbitrarily chosen
+				}
+				if(c1Roll == c2Roll) {	//if they both roll the same number, randomly determine winner
+					int randDetermine = Critter.getRandomInt(10);
+					if(randDetermine % 2 == 0) {
+						winner = c1;
+						loser = c2;
+					} else {
+						winner = c2;
+						loser = c1;
+					}
+				} else if(c1Roll > c2Roll) {
 					winner = c1;
 					loser = c2;
-				} else {
+				} else if(c2Roll > c1Roll) {
 					winner = c2;
 					loser = c1;
 				}
-			} else if(c1Roll > c2Roll) {
-				winner = c1;
-				loser = c2;
-			} else if(c2Roll > c1Roll) {
-				winner = c2;
-				loser = c1;
-			}
-			try {
-				winner.energy += loser.energy/2;
-				loser.energy = 0;
-				loser.deadToRemove = true;
-				//removeThisCritter(loser, false);
-			} catch(Throwable e) {
-				System.out.println("winner loser null reference: " + e);
-			}
+				try {
+					winner.energy += loser.energy/2;
+					loser.energy = 0;
+					loser.deadToRemove = true;
+					//removeThisCritter(loser, false);
+				} catch(Throwable e) {
+					System.out.println("winner loser null reference: " + e);
+				}
+			}	
 		}
 		catch(Exception eror) {
 			System.out.println("error in using multiplly occupied arraylist as key for hashmap to get critters: " );
@@ -617,7 +626,7 @@ public abstract class Critter {
 					}
 				}
 			} catch(Exception e) {
-				System.out.println("remove all dead: " + e.getStackTrace());
+				System.err.println("remove all dead  ISSUE: " + e.getStackTrace());
 			}
 		}
 		for(int i = 0; i < toBeRemoved.size(); i++) {
