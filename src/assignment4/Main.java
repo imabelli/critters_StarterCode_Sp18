@@ -68,14 +68,14 @@ public class Main {
         } else { // if no arguments to main
             kb = new Scanner(System.in); // use keyboard and console
         }
-        System.out.println("critters>");
+        System.out.print("critters>");
         String userInput = kb.nextLine();
         
         String[] splitInput = userInput.trim().split("\\s+");
         //add start of controller to parse user input
         while(!(splitInput[0].equals("quit") && (splitInput.length) == 1)) {
         	if(splitInput[0].equals("show")) {
-        		Critter.displayWorld();
+        		assignment4.Critter.displayWorld();
         	} else if(splitInput[0].equals("step")) {
         		stepCommand(splitInput, userInput);
         	} else if(splitInput[0].equals("seed")) {
@@ -89,7 +89,7 @@ public class Main {
         	}else {
         		System.out.println("invalid command: " + userInput);
         	}
-        	System.out.println("critters>");
+        	System.out.print("critters>");
         	userInput = kb.nextLine();
         	splitInput = userInput.trim().split("\\s+");
         }
@@ -175,19 +175,21 @@ public class Main {
     		}
     	}
     	boolean validCritter = true;
-    	try {
-    		Critter.makeCritter(critterType);
-    	} catch(InvalidCritterException ice) {
-    		System.out.println("error processing: " + userInput);
-    		validCritter = false;
-    	}		
-    	if(validCritter) {
-    		for(int i = 1; i < numCritters; i++) {
-    			try {
-    				Critter.makeCritter(critterType);
-    			} catch(InvalidCritterException ice) {	//should never be executed, validCritter eliminates need so we don't keep reprinting error message	
-    			}
-    	}
+    	if(splitInput.length < 4) {
+    		try {
+        		Critter.makeCritter(critterType);
+        	} catch(InvalidCritterException ice) {
+        		System.out.println("error processing: " + userInput);
+        		validCritter = false;
+        	}		
+        	if(validCritter) {
+        		for(int i = 1; i < numCritters; i++) {
+        			try {
+        				Critter.makeCritter(critterType);
+        			} catch(InvalidCritterException ice) {	//should never be executed, validCritter eliminates need so we don't keep reprinting error message	
+        			}
+        	}
+        	}
     	}
     }
 }

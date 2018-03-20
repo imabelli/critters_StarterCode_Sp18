@@ -295,7 +295,7 @@ public abstract class Critter {
 				critterAtLocMap.get(loc).add(newCritter);
 			}
 		} catch(Throwable error) {
-			System.err.println(error);
+			//System.err.println(error);
 			throw new InvalidCritterException(critter_class_name);
 		}
 	}
@@ -343,7 +343,7 @@ public abstract class Critter {
 			Object o = method.invoke(null, result);
 		}
 		catch(Exception e) {
-			System.out.println(e.getStackTrace());
+			throw new InvalidCritterException(critter_class_name);
 		}
 		return result;
 	}
@@ -582,19 +582,19 @@ public abstract class Critter {
 		ArrayList<Critter> crittersHereList = critterAtLocMap.get(atLoc);
 		
 		Set<Coordinate> keySet = critterAtLocMap.keySet();
-		System.out.println("All locations");
-		for (Coordinate cord :  keySet) {
-			System.out.println(cord + ": " + critterAtLocMap.get(cord).size());
-		}
-		if(!justMoving) {
-			System.out.println("coordinate to remove: " +  atLoc);	
-		}
+//		System.out.println("All locations");
+//		for (Coordinate cord :  keySet) {
+//			System.out.println(cord + ": " + critterAtLocMap.get(cord).size());
+//		}
+//		if(!justMoving) {
+//			System.out.println("coordinate to remove: " +  atLoc);	
+//		}
 			
 		
 		if(crittersHereList == null) {
 			System.err.println("removing critter at null key in hashmap");
 		} else {
-			System.out.println(" crittersHereList.size(): " +  crittersHereList.size());
+			//System.out.println(" crittersHereList.size(): " +  crittersHereList.size());
 		}
 		for(int i = 0; i < crittersHereList.size(); i++) {
 			if(crittersHereList.get(i).equals(toRemove)) {
