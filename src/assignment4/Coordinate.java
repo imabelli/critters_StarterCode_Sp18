@@ -19,6 +19,7 @@ public class Coordinate implements Comparable{
 	public boolean equals(Object o) {
 		return (this.x_coord == ((Coordinate)o).x_coord) && (this.y_coord == ((Coordinate)o).y_coord); 
 	}
+	
 	@Override
 	public int compareTo(Object o) {	//to help sort coordinates and see if there are multiple with same coordinate values
 		int thisSumCoords = this.x_coord + this.y_coord;

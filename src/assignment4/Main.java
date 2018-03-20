@@ -107,17 +107,17 @@ public class Main {
     private static void statsCommand(String[] splitInput, String userInput) {
     	if(splitInput.length != 2) {	
     		System.out.println("error processing: " + userInput);
+    	} else {
+    		String className = splitInput[1];
+        	boolean validCritter = true;
+        	List<Critter> instances;
+        	try {
+        		instances = Critter.getInstances(className);
+        	} catch(InvalidCritterException ice) {
+        		System.out.println("error processing: " + userInput);
+        		validCritter = false;
+        	}		
     	}
-    	String className = splitInput[1];
-    	boolean validCritter = true;
-    	List<Critter> instances;
-    	try {
-    		instances = Critter.getInstances(className);
-    	} catch(InvalidCritterException ice) {
-    		System.out.println("error processing: " + userInput);
-    		validCritter = false;
-    	}		
-    
     }
     private static void stepCommand(String[] splitInput, String userInput) {
     	int numSteps = 1;

@@ -29,6 +29,9 @@ import java.util.Set;
 
 
 public abstract class Critter {
+	private static int numWalks = 0;
+	private static int numNewLocsForWalking = 0;
+	private static int numLocsDelForWalking = 0;
 	private static String myPackage;
 	private	static List<Critter> population = new java.util.ArrayList<Critter>();
 	private static List<Critter> babies = new java.util.ArrayList<Critter>();
@@ -64,12 +67,13 @@ public abstract class Critter {
 	
 	
 	protected final void walk(int direction) {
+		numWalks++;	//isa
 		this.energy -= Params.walk_energy_cost;
 		removeThisCritter(this, true);	//remove Critter from previous location in map of locs and critters
 		if(this.energy <= 0) {
 			deadToRemove = true;	
 			//Critter.removeThisCritter(this, false);
-		} else {
+		}
 			movedThisStep = true;
 			if(direction == 0) {
 				if(this.x_coord == Params.world_width - 1) {
@@ -141,6 +145,7 @@ public abstract class Critter {
 				}
 			}
 			Coordinate newLoc = new Coordinate(this.x_coord, this.y_coord);
+			numNewLocsForWalking++;
 			if(critterAtLocMap.get(newLoc) == null) {	//if there are no critters at that location
 				ArrayList<Critter> critList = new ArrayList<Critter>();
 				critList.add(this);
@@ -149,19 +154,18 @@ public abstract class Critter {
 				critterAtLocMap.get(newLoc).add(this);
 			}
 		}
-	}
 	
+
 	protected final void run(int direction) {
 		this.energy += (2*Params.walk_energy_cost);	//add energy that will be deducted from walking
 		this.energy -= Params.run_energy_cost;	//deduct run energy cost
 		if(this.energy <= 0) {
 			deadToRemove = true;
 			//Critter.removeThisCritter(this, false);
-		} else {
+		} 
 			this.walk(direction);
 			this.walk(direction);
-			movedThisStep = true;
-		}
+			movedThisStep = true;	
 	}
 	
 	protected final void reproduce(Critter offspring, int direction) {
@@ -308,7 +312,7 @@ public abstract class Critter {
 				multiplyOccupied.add(key);
 			}
 		}
-		if(multiplyOccupied.size() != 0) {	//if there is a multiply occupied location
+		if(multiplyOccupied.size() > 0) {	//if there is a multiply occupied location
 			needResolveConflicts = true;
 		}
 	}
@@ -316,7 +320,7 @@ public abstract class Critter {
 	private static int countNumAliveAtLocation(Coordinate coord) {
 		int numAlive = 0;
 		for(int i = 0; i < critterAtLocMap.get(coord).size(); i++) {
-			if(!(critterAtLocMap.get(coord).get(i).deadToRemove)) {
+			if(!(critterAtLocMap.get(coord).get(i).deadToRemove) && critterAtLocMap.get(coord).get(i).energy > 0) {
 				numAlive++;
 			}
 		}
@@ -472,7 +476,6 @@ public abstract class Critter {
 		for(Critter c : population) {
 			c.energy -= Params.rest_energy_cost;
 		}
-		removeAllDead();
 		for(int i = 0; i < Params.refresh_algae_count; i++) {
 			try {
 				makeCritter("Algae");
@@ -481,6 +484,7 @@ public abstract class Critter {
 				System.out.println("error making algae");
 			}
 		}
+		removeAllDead();
 		for(int i = 0; i < babies.size(); i++) {
 			population.add(babies.get(i));
 			Coordinate newLoc = new Coordinate(babies.get(i).x_coord, babies.get(i).y_coord);	//add babies to the map
@@ -506,13 +510,13 @@ public abstract class Critter {
 			int indexFirstAlive = -1;
 			int indexSecondAlive = -1;
 			for(int i = 0; i < critterAtLocMap.get(currentLoc).size(); i++) {
-				if(!critterAtLocMap.get(currentLoc).get(i).deadToRemove) {
+				if(!critterAtLocMap.get(currentLoc).get(i).deadToRemove && critterAtLocMap.get(currentLoc).get(i).energy > 0) {
 					indexFirstAlive= i;
 					break;
 				}
 			}
 			for(int i = indexFirstAlive + 1; i < critterAtLocMap.get(currentLoc).size(); i++) {
-				if(!critterAtLocMap.get(currentLoc).get(i).deadToRemove) {
+				if(!critterAtLocMap.get(currentLoc).get(i).deadToRemove && critterAtLocMap.get(currentLoc).get(i).energy > 0) {
 					indexSecondAlive = i;
 					break;
 				}
@@ -528,7 +532,7 @@ public abstract class Critter {
 			boolean c2Fight = c2.fight(c1.toString());
 			int c1Roll = -1;
 			int c2Roll = -1;
-			if((!c1.deadToRemove && !c2.deadToRemove) && (c1.x_coord == c2.x_coord) && (c1.y_coord == c2.y_coord)) {
+			if((!c1.deadToRemove && !c2.deadToRemove) && (c1.x_coord == c2.x_coord) && (c1.y_coord == c2.y_coord) && c1.energy > 0 && c2.energy > 0) {
 				if(c1Fight && c2Fight) {
 					c1Roll = Critter.getRandomInt(c1.energy);
 					c2Roll = Critter.getRandomInt(c2.energy);
@@ -578,6 +582,9 @@ public abstract class Critter {
 	}
 	
 	private static void removeThisCritter(Critter toRemove, boolean justMoving) {
+		if(justMoving) {
+			numLocsDelForWalking++;
+		}
 		Coordinate atLoc = new Coordinate(toRemove.x_coord, toRemove.y_coord);
 		ArrayList<Critter> crittersHereList = critterAtLocMap.get(atLoc);
 		
@@ -592,6 +599,9 @@ public abstract class Critter {
 			
 		
 		if(crittersHereList == null) {
+			System.err.println(numWalks);
+			System.err.println(numLocsDelForWalking);
+			System.err.println(numNewLocsForWalking);
 			System.err.println("removing critter at null key in hashmap");
 		} else {
 			//System.out.println(" crittersHereList.size(): " +  crittersHereList.size());

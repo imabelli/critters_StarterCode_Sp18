@@ -43,7 +43,7 @@ public class Craig extends Critter {
 			child.genes[g] -= 1;
 			g = Critter.getRandomInt(8);
 			child.genes[g] += 1;
-			reproduce(child, Critter.getRandomInt(8));
+			reproduce(child, Critter.getRandomInt(8)); 
 		}
 		
 		/* pick a new direction based on our genes */
