@@ -70,25 +70,27 @@ public abstract class Critter {
 	
 	
 	protected final void walk(int direction) {
-		if(isFighting && movedThisStep) {	//isa
+		if(isFighting && movedThisStep && !isRunningFight) {	//if fighting and already moved and not called from run for fight
+			this.deadToRemove = true;
+			this.energy = 0;
 			return;
 		}
-		numWalks++;	//isa
+		numWalks++;	//isa debug variable
 		this.energy -= Params.walk_energy_cost;
 		if(!isFighting) {
-			removeThisCritter(this, true);
-		}	//remove Critter from previous location in map of locs and critters
+			removeThisCritter(this, true); //remove Critter from previous location in map of locs and critters
+		}	
 		if(this.energy <= 0) {
 			deadToRemove = true;	
 			//Critter.removeThisCritter(this, false);
 		}
-		if(!isFighting) {	//isa
+		if(!isFighting) {	//moved this step if not called from fight
 			movedThisStep = true;
 		}
-			if(direction == 0) {
-				if(this.x_coord == Params.world_width - 1) {
+		if(direction == 0) {
+			if(this.x_coord == Params.world_width - 1) {
 					this.x_coord = 0;
-				} else {
+			} else {
 					this.x_coord++;
 				}
 			} else if(direction == 1) {
@@ -156,12 +158,14 @@ public abstract class Critter {
 			}
 			Coordinate newLoc = new Coordinate(this.x_coord, this.y_coord);
 			if(isFighting) {
-				if(countNumAliveAtLocation(newLoc) > 0 && walkRunFightCallNum == 2) {	//if is fighting and location is already occupied, do nothing
+				if(countNumAliveAtLocation(newLoc) > 0 && walkRunFightCallNum == 2) {	//if is fighting and location is already occupied, do not create new location in map
+					this.deadToRemove = true;
+					this.energy = 0;
 					return;
 				}
 				removeThisCritter(this, true);	//if there are no other alive critters, remove and allocate new spot
 			}
-			numNewLocsForWalking++;
+			numNewLocsForWalking++;	//for debugging
 			if(critterAtLocMap.get(newLoc) == null) {	//if there are no critters at that location
 				ArrayList<Critter> critList = new ArrayList<Critter>();
 				critList.add(this);
@@ -173,21 +177,29 @@ public abstract class Critter {
 	
 
 	protected final void run(int direction) {
+		if(!isFighting) {
+			movedThisStep = true;
+		}
 		walkRunFightCallNum = 0;
 		if(isFighting) {
 			isRunningFight = true;
+			//this.energy -= Params.run_energy_cost;
+		}
+		if(isFighting && movedThisStep) {	//if already moved, don't move
+			this.energy -= Params.run_energy_cost;
+			return;
 		}
 		this.energy += (2*Params.walk_energy_cost);	//add energy that will be deducted from walking
+		walkRunFightCallNum = 1;
+		this.walk(direction);
+		walkRunFightCallNum = 2;
+		this.walk(direction);
 		this.energy -= Params.run_energy_cost;	//deduct run energy cost
 		if(this.energy <= 0) {
 			deadToRemove = true;
 			//Critter.removeThisCritter(this, false);
 		} 
-		walkRunFightCallNum = 1;
-			this.walk(direction);
-		walkRunFightCallNum = 2;
-			this.walk(direction);
-			movedThisStep = true;	
+		//movedThisStep = true;	
 	}
 	
 	protected final void reproduce(Critter offspring, int direction) {
@@ -432,7 +444,7 @@ public abstract class Critter {
 			for(int i = 0; i < numSteps; i++) {
 				walk(direction);
 			}
-			//this.movedThisStep = false;
+			super.movedThisStep = false;
 			System.out.println("");
 		}	
 		
@@ -449,7 +461,7 @@ public abstract class Critter {
 			for(int i = 0; i < numSteps; i++) {
 				walk(direction);
 			}
-			//this.movedThisStep = false;
+			super.movedThisStep = false;
 		}
 		
 		protected int getX_coord() {
@@ -503,6 +515,7 @@ public abstract class Critter {
 		}
 		for(Critter c : population) {
 			c.energy -= Params.rest_energy_cost;
+			c.movedThisStep = false;
 		}
 		for(int i = 0; i < Params.refresh_algae_count; i++) {
 			try {
@@ -722,15 +735,15 @@ public abstract class Critter {
 		for(int curRow = 0; curRow < Params.world_height + 2; curRow++) {
 			System.out.println(String.valueOf(worldArray[curRow]).trim());
 		}
-		System.out.println("debug view");
-		for(int curRow = 0; curRow < Params.world_height; curRow++) {
-			for(int curCol = 0; curCol < Params.world_width; curCol++) {
-				if(critterAtLocMap.get(new Coordinate(curCol, curRow)) != null) {
-					System.out.print(countNumAliveAtLocation(new Coordinate(curCol, curRow)) + " ");
-				}
-			}
-			System.out.println();
-		}
+//		System.out.println("debug view");
+//		for(int curRow = 0; curRow < Params.world_height; curRow++) {
+//			for(int curCol = 0; curCol < Params.world_width; curCol++) {
+//				if(critterAtLocMap.get(new Coordinate(curCol, curRow)) != null) {
+//					System.out.print(countNumAliveAtLocation(new Coordinate(curCol, curRow)) + " ");
+//				}
+//			}
+//			System.out.println();
+//		}
 	}
 		
 		
