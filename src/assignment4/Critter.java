@@ -462,6 +462,10 @@ public abstract class Critter {
 	 */
 	public static void clearWorld() {
 		// Complete this method.
+		population.clear();
+		babies.clear();
+		critterAtLocMap.clear();
+		
 	}
 	
 	public static void worldTimeStep() {
