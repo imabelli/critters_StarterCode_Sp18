@@ -722,7 +722,7 @@ public abstract class Critter {
 		for(int curRow = 0; curRow < Params.world_height + 2; curRow++) {
 			System.out.println(String.valueOf(worldArray[curRow]).trim());
 		}
-		System.out.println("debug view");
+		//System.out.println("debug view");
 		for(int curRow = 0; curRow < Params.world_height; curRow++) {
 			for(int curCol = 0; curCol < Params.world_width; curCol++) {
 				if(critterAtLocMap.get(new Coordinate(curCol, curRow)) != null) {
