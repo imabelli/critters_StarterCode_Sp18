@@ -75,7 +75,12 @@ public class Main {
         //add start of controller to parse user input
         while(!(splitInput[0].equals("quit") && (splitInput.length) == 1)) {
         	if(splitInput[0].equals("show")) {
-        		assignment4.Critter.displayWorld();
+        		if(splitInput.length == 1) {
+        			assignment4.Critter.displayWorld();
+        		}
+        		else {
+        			System.out.println("error processing: " + userInput);
+        		}
         	} else if(splitInput[0].equals("step")) {
         		stepCommand(splitInput, userInput);
         	} else if(splitInput[0].equals("seed")) {

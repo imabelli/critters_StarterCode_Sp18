@@ -41,6 +41,9 @@ public abstract class Critter {
 	private static boolean needResolveConflicts = false;
 	private boolean deadToRemove = false;	//dead, to be removed at end of time step. doesn't result in conflicts
 	private boolean movedThisStep = false;
+	private boolean isFighting = false;
+	private boolean isRunningFight = false;
+	private int walkRunFightCallNum = 0;
 	
 	static {
 		myPackage = Critter.class.getPackage().toString().split(" ")[1];
@@ -67,14 +70,21 @@ public abstract class Critter {
 	
 	
 	protected final void walk(int direction) {
+		if(isFighting && movedThisStep) {	//isa
+			return;
+		}
 		numWalks++;	//isa
 		this.energy -= Params.walk_energy_cost;
-		removeThisCritter(this, true);	//remove Critter from previous location in map of locs and critters
+		if(!isFighting) {
+			removeThisCritter(this, true);
+		}	//remove Critter from previous location in map of locs and critters
 		if(this.energy <= 0) {
 			deadToRemove = true;	
 			//Critter.removeThisCritter(this, false);
 		}
+		if(!isFighting) {	//isa
 			movedThisStep = true;
+		}
 			if(direction == 0) {
 				if(this.x_coord == Params.world_width - 1) {
 					this.x_coord = 0;
@@ -145,6 +155,12 @@ public abstract class Critter {
 				}
 			}
 			Coordinate newLoc = new Coordinate(this.x_coord, this.y_coord);
+			if(isFighting) {
+				if(countNumAliveAtLocation(newLoc) > 0 && walkRunFightCallNum == 2) {	//if is fighting and location is already occupied, do nothing
+					return;
+				}
+				removeThisCritter(this, true);	//if there are no other alive critters, remove and allocate new spot
+			}
 			numNewLocsForWalking++;
 			if(critterAtLocMap.get(newLoc) == null) {	//if there are no critters at that location
 				ArrayList<Critter> critList = new ArrayList<Critter>();
@@ -157,13 +173,19 @@ public abstract class Critter {
 	
 
 	protected final void run(int direction) {
+		walkRunFightCallNum = 0;
+		if(isFighting) {
+			isRunningFight = true;
+		}
 		this.energy += (2*Params.walk_energy_cost);	//add energy that will be deducted from walking
 		this.energy -= Params.run_energy_cost;	//deduct run energy cost
 		if(this.energy <= 0) {
 			deadToRemove = true;
 			//Critter.removeThisCritter(this, false);
 		} 
+		walkRunFightCallNum = 1;
 			this.walk(direction);
+		walkRunFightCallNum = 2;
 			this.walk(direction);
 			movedThisStep = true;	
 	}
@@ -321,7 +343,9 @@ public abstract class Critter {
 		int numAlive = 0;
 		for(int i = 0; i < critterAtLocMap.get(coord).size(); i++) {
 			if(!(critterAtLocMap.get(coord).get(i).deadToRemove) && critterAtLocMap.get(coord).get(i).energy > 0) {
-				numAlive++;
+				if(!(critterAtLocMap.get(coord).get(i) instanceof Algae)) {
+					numAlive++;
+				}
 			}
 		}
 		return numAlive;
@@ -533,7 +557,9 @@ public abstract class Critter {
 			Critter winner = null;
 			Critter loser = null;
 			boolean c1Fight = c1.fight(c2.toString());
+			c1.isFighting = c1Fight;
 			boolean c2Fight = c2.fight(c1.toString());
+			c2.isFighting = c2Fight;
 			int c1Roll = -1;
 			int c2Roll = -1;
 			if((!c1.deadToRemove && !c2.deadToRemove) && (c1.x_coord == c2.x_coord) && (c1.y_coord == c2.y_coord) && c1.energy > 0 && c2.energy > 0) {
@@ -567,6 +593,8 @@ public abstract class Critter {
 					winner = c2;
 					loser = c1;
 				}
+				c1.isFighting = false;
+				c2.isFighting = false;
 				try {
 					winner.energy += loser.energy/2;
 					loser.energy = 0;
@@ -692,7 +720,16 @@ public abstract class Critter {
 		initEmptyWorldView();
 		populateWorldView();
 		for(int curRow = 0; curRow < Params.world_height + 2; curRow++) {
-			System.out.println(worldArray[curRow]);
+			System.out.println(String.valueOf(worldArray[curRow]).trim());
+		}
+		System.out.println("debug view");
+		for(int curRow = 0; curRow < Params.world_height; curRow++) {
+			for(int curCol = 0; curCol < Params.world_width; curCol++) {
+				if(critterAtLocMap.get(new Coordinate(curCol, curRow)) != null) {
+					System.out.print(countNumAliveAtLocation(new Coordinate(curCol, curRow)) + " ");
+				}
+			}
+			System.out.println();
 		}
 	}
 		
