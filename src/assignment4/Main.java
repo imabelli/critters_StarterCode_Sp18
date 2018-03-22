@@ -23,6 +23,11 @@ import java.io.*;
  * input file is optional.  If input file is specified, the word 'test' is optional.
  * May not use 'test' argument without specifying input file.
  */
+/**
+ * This class executes Critters lab, which simulates a Critter world with critters that reproduce, move, die, and fight
+ * @author Isabel Li
+ * @version 1.0
+ */
 public class Main {
 
     static Scanner kb;	// scanner connected to keyboard input, or input file
@@ -68,52 +73,48 @@ public class Main {
         } else { // if no arguments to main
             kb = new Scanner(System.in); // use keyboard and console
         }
-        System.out.print("critters>");
+        System.out.print("critters>");	//user input prompt
         String userInput = kb.nextLine();
-        
-        String[] splitInput = userInput.trim().split("\\s+");
+        String[] splitInput = userInput.trim().split("\\s+");	//split user input
         //add start of controller to parse user input
         while(!(splitInput[0].equals("quit") && (splitInput.length) == 1)) {
-        	if(splitInput[0].equals("show")) {
+        	if(splitInput[0].equals("show")) {	//show command
         		if(splitInput.length == 1) {
         			assignment4.Critter.displayWorld();
         		}
         		else {
         			System.out.println("error processing: " + userInput);
         		}
-        	} else if(splitInput[0].equals("step")) {
+        	} else if(splitInput[0].equals("step")) {	//process step command
         		stepCommand(splitInput, userInput);
-        	} else if(splitInput[0].equals("seed")) {
+        	} else if(splitInput[0].equals("seed")) {	//process seed command
         		seedCommand(splitInput, userInput);
-        	} else if(splitInput[0].equals("make")) {
+        	} else if(splitInput[0].equals("make")) {	//process make command
         		makeCommand(splitInput, userInput);
-        	} else if(splitInput[0].equals("stats")) {
+        	} else if(splitInput[0].equals("stats")) {	//process stats command
         		statsCommand(splitInput, userInput);
-        	}  else if(splitInput[0].equals("seed")) {
+        	}  else if(splitInput[0].equals("seed")) {	//process seed command
         		seedCommand(splitInput, userInput);
         	}else {
-        		System.out.println("invalid command: " + userInput);
+        		System.out.println("invalid command: " + userInput);	//invalid command
         	}
-        	System.out.print("critters>");
-        	userInput = kb.nextLine();
+        	System.out.print("critters>");	//reprompt for user input
+        	userInput = kb.nextLine();	
         	splitInput = userInput.trim().split("\\s+");
         }
-        //now we will check for user commands (valid commands in instructions)
-        
-        /* Do not alter the code above for your submission. */
-        /* Write your code below. */
-        
-        // System.out.println("GLHF");
-        
-        /* Write your code above */
         System.out.flush();
-
     }
+    
+    /**
+     * statsCommand is called when user requests stats
+     * @param splitInput is array of individual words from user input
+     * @param userInput is the user input string, unparsed
+     */
     private static void statsCommand(String[] splitInput, String userInput) {
-    	if(splitInput.length != 2) {	
+    	if(splitInput.length != 2) {	//input must always be 2 words with stats command
     		System.out.println("error processing: " + userInput);
     	} else {
-    		String className = splitInput[1];
+    		String className = splitInput[1];	//this must be the object type we want stats of
         	boolean validCritter = true;
         	List<Critter> instances;
         	try {
@@ -124,6 +125,12 @@ public class Main {
         	}		
     	}
     }
+    
+    /**
+     * stepCommand is called when user requests step(s)
+     * @param splitInput is array of individual words from user input
+     * @param userInput is the user input string, unparsed
+     */
     private static void stepCommand(String[] splitInput, String userInput) {
     	int numSteps = 1;
 		if(splitInput.length != 1) {	//user has tried to specify number of steps
@@ -144,6 +151,11 @@ public class Main {
 		}
     }
     
+    /**
+     * seedCommand is called when user requests to seed random
+     * @param splitInput is array of individual words from user input
+     * @param userInput is the user input string, unparsed
+     */
     private static void seedCommand(String[] splitInput, String userInput) {
     	int seed = 1;
 		if(splitInput.length != 1) {	//user has tried to specify number of steps
@@ -162,9 +174,13 @@ public class Main {
 		}
     }
     
-    
+    /**
+     * statsCommand is called when user wants to make Critters
+     * @param splitInput is array of individual words from user input
+     * @param userInput is the user input string, unparsed
+     */
     private static void makeCommand(String[] splitInput, String userInput) {
-    	int numCritters = 1;
+    	int numCritters = 1;	//1 Critter made by default
     	String critterType = splitInput[1];
     	if(splitInput.length != 2) {	//user has tried to specify number of critters
     		if(splitInput.length == 3) {
@@ -183,8 +199,8 @@ public class Main {
     	if(splitInput.length < 4) {
     		try {
         		Critter.makeCritter(critterType);
-        	} catch(InvalidCritterException ice) {
-        		System.out.println("error processing: " + userInput);
+        	} catch(InvalidCritterException ice) {	//invalid critter
+        		System.out.println("error processing: " + userInput);	
         		validCritter = false;
         	}		
         	if(validCritter) {
