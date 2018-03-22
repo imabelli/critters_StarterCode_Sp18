@@ -3,7 +3,7 @@ package assignment4;
 /**
  * Coordinate class helps us find Critters based on coordinate location
  * @author Isabel Li
- *
+ *	UTEID: ijl283
  */
 public class Coordinate implements Comparable{
 	protected int x_coord;

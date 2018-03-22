@@ -5,6 +5,7 @@ package assignment4;
  * With each time step, the critter runs in direction 1.
  * Critter1 is represented by "1" on the view
  * @author Isabel Li
+ * UTEID: ijl283
  *
  */
 public class Critter1 extends Critter {

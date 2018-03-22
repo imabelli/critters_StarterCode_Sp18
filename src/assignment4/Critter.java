@@ -32,6 +32,7 @@ import java.util.Set;
  * Critter is the abstract class that serves as the base class for all types of Critter, implements common functionality methods between subclasses of Critters
  * @author Isabel Li
  * @version 1.0
+ * UTEID: ijl283
  */
 public abstract class Critter {
 	private static int numWalks = 0;

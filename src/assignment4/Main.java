@@ -27,6 +27,7 @@ import java.io.*;
  * This class executes Critters lab, which simulates a Critter world with critters that reproduce, move, die, and fight
  * @author Isabel Li
  * @version 1.0
+ * UTEID: ijl283
  */
 public class Main {
 
